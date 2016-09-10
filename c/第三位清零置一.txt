@@ -1,0 +1,20 @@
+#include <stdio.h>     
+#define Bit3 (0X01<<3)   
+/*对一个数的第三位进行清零、置位、取反*/  
+int main()  
+{  
+    int a=15 ;      // 0000 1111   
+  
+    printf("原大小：%d\n", a);  
+  
+    a &= ~Bit3;     //清零, 0000 0111   
+    printf("清零后：%d\n", a);  
+  
+    a |= Bit3;     //置位, 0000 1111   
+    printf("置位后：%d\n", a);  
+  
+    a ^= Bit3;     //取反, 0000 0111   
+    printf("取反后：%d\n", a);  
+  
+    return 0;  
+}  

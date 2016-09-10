@@ -1,0 +1,35 @@
+{
+    "cmd_type": "001",
+    "from": "PMP",
+    "to": "PMS",
+    "timestamp": "",
+    "dev_id": "",
+    "use": "",
+    "ip_list": [
+        {
+            "ip": ""
+        },
+        {},
+        {}
+    ],
+    "local_id": "",
+    "local_name": "",
+    "cpu_model": "",
+    "cpu_num": "",
+    "cpu_rate": "",
+    "cpu_core_num": "",
+    "ram_rate": "",
+    "ram_size": "",
+    "ram_access_nu": "",
+    "disk_ram": "",
+    "disk_rotation_speed": "",
+    "disk_array": "",
+    "nic_type": "",
+    "nic_speed": "",
+    "FSMCSSN": "",
+    "FSCNFRtmp": "",
+    "FSCNFRtsp": "",
+    "FSCNFIOS": "",
+    "FSCNFAndroid": "",
+    "FSTCN": ""
+}

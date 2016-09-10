@@ -1,0 +1,172 @@
+linux下用c语言实现冒泡排序、快速排序、选择排序、二分查找#include<stdio.h>
+#define size 100
+int Binary_Search(int num[],int n,int m)
+{
+ int low=0,high,middle;
+ high=n-1;
+ while(low<=high)
+ {
+  middle=(low+high)/2;
+  if(num[middle]==m)
+  return 1;
+  else if(num[middle]<m)
+  low=middle+1;
+  else if(num[middle]>m)
+  high=middle-1;
+ }
+ return -1;
+}//二分法查找
+int Select(int num[],int n,int i,int j)
+{
+ char c;
+ int m=0;
+ printf("提示：是否进行排序『Y/y进入排序界面，否则跳过排序』？\n");
+ c=getchar();
+ scanf("%c",&c);
+ if(c=='Y'||c=='y')
+ {
+  printf("请选择排序方式\n");
+  printf("1~选择排序，2～快速排序，3～冒泡排序\n");
+  printf("请输入相应排序数字：\n");
+  scanf("%d",&m);
+  switch(m)
+  {
+   case 1:
+   SelectkSort(num,n);
+   break;
+   case 2:
+   QuickSort(num,0,n-1);
+   break;
+   case 3:
+   BubbleSort(num,n);
+   break;
+   default:
+   printf("您输入的数字有误！\n");
+   break;
+  }
+ 
+  printf("*******排序后的结果打印如下******\n");
+  printf("num[5]={");
+  for(i=0;i<=n-1;i++)
+  printf("%d,",num[i]);
+  printf("\b}\n");
+ }
+ else
+ printf("*********您跳过了排序功能********");
+}
+int SelectkSort(int a[],int n)
+{
+ int i,j,key,temp;
+ for(i=0;i<n-1;i++)
+ { key=i;//记录每一次无序区间第一个下标的数值为关键值
+  for(j=i+1;j<n-1;j++)
+  {
+   if(a[key]>a[j])
+   key=j;
+  }//搜素关键值无序区间最小数字的记录位置
+  if(key!=i)
+  {
+   temp=a[key];
+   a[key]=a[i];
+   a[i]=temp; 
+  }//将无序区间的最小元素与关键值交换
+ }
+}//选择排序算法
+int QuickSort(int a[],int i,int j)
+{
+ int temp,key=0,m=i,n=j;
+ key=a[(i+j)/2];
+ do
+ {
+  while((m<j) && (a[m]<key)) m++;//直到在左区间找到一个大于关键值的。
+  while((n>i) && (a[n]>key)) n--;//直到在右区间找到第一个小于关键值的。
+  if(m<=n)
+  {
+   temp=a[m];
+   a[m]=a[n];
+   a[n]=temp;
+   m++;
+   n--;
+  }//将左区间第一大于关键值的数字和右区间第一个小于关键值的数字进行交换。
+ }while(n>=m);//第一趟排序结束，将数组分成两个区间
+ if(n>i) QuickSort(a,i,n);//右区间递归调用
+ if(m<j) QuickSort(a,m,j);//左区间递归调用
+}//快去排序算法
+int  BubbleSort(int a[],int n)
+{
+ int i,j,temp,flag=0;
+ for(i=0;i<n;i++)
+ {
+  for(j=0;j<n-i-1;j++)
+  {
+   if(a[j]>a[j+1])
+   {
+    temp=a[j];
+    a[j]=a[j+1];
+    a[j+1]=temp;
+    flag=1;
+   }
+  }
+  if(flag==0)
+  break;
+ }
+}//冒泡排序
+int max(int a[],int n)
+{
+ int i,max=a[0];
+ for(i=1;i<=n-1;i++)
+ if(max<a[i])
+ max=a[i];
+ return max;
+}
+int main()
+{
+ int i=1,m=0,n=0,a,num_max,num[size];
+ printf("*************请输入N个整数*************\n");
+ do
+ { 
+  printf("输入第%d个整数：",i);
+  scanf("%d",&a);
+  if((a%2)!=0)
+  {
+  num[n]=a;
+  n++;
+  }
+  i++;
+ }while(n!=5);
+ printf("**您输入的数字中有5个奇数了，打印如下**\n");
+ printf("num[5]={");
+ for(i=0;i<=n-1;i++)
+ printf("%d,",num[i]);
+ printf("\b}\n");
+ Select(num,n,0,n-1);
+ printf("**您是否使用查找功能『Y/y是，否则跳过』？**\n");
+ char c;
+ int flag=0;
+ c=getchar();
+ scanf("%c",&c);
+ if(c=='Y'||c=='y')
+ {
+  printf("请输入您要查找的数字：");
+  scanf("%d",&m);
+  flag=Binary_Search(num,n,m);
+  if(flag==1)
+  printf("查找成功！\n");
+  else
+  printf("没有找到您输入的数字！\n");
+ }
+ printf("是否显示出当前数字中最大的数字『Y/y是，否则退出程序』？\n");
+ c=getchar();
+ scanf("%c",&c);
+ if(c=='Y'||c=='y')
+ {
+  num_max=max(num,n);
+  printf("Max=%d\n",num_max);
+  printf("***************************************\n");
+ }
+ else
+ {
+  printf("**********欢迎您下次使用，再见！**********\n");
+  return;
+ }
+

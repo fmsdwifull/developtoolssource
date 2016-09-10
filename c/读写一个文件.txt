@@ -1,0 +1,131 @@
+while( nRead = fread( buffer, sizeof(unsigned char), sizeof(buffer), pFileS ) ) 
+fwrite( buffer, sizeof(unsigned char), nRead, pFileD ); 
+
+
+部分：比如读10个，可以用for循环嘛
+实例代码：
+1.函数功能
+
+  用来读写一个数据块。
+
+2.一般调用形式
+
+  fread(buffer,size,count,fp);
+
+  fwrite(buffer,size,count,fp);
+
+3.说明
+
+  （1）buffer：是一个指针，对fread来说，它是读入数据的存放地址。对fwrite来说，是要输出数据的地址。
+
+  （2）size：要读写的字节数；
+
+  （3）count:要进行读写多少个size字节的数据项；
+
+  （4）fp:文件型指针。
+
+ 注意：1 完成次写操(fwrite())作后必须关闭流(fclose());
+
+           2 完成一次读操作(fread())后，如果没有关闭流(fclose()),则指针(FILE * fp)自动向后移动前一次读
+
+写的长度，不关闭流继续下一次读操作则接着上次的输出继续输出;
+
+           3 fprintf() ： 按格式输入到流，其原型是int fprintf(FILE *stream, const char *format[, 
+
+argument, ...]);其用法和printf()相同，不过不是写到控制台，而是写到流罢了。注意的是返回值为此次操作写入到
+
+文件的字节数。如int c = fprintf(fp, "%s %s %d %f", str1,str2, a, b) ;str1：10字节；str2： 10字节；a：
+
+2字节；b：8字节，c为33，因为写入时不同的数据间自动加入一个空格。
+
+文件使用之后一定要关闭,否则将不能正确显示内容.fwrite:读入两个学生信息然后用fwrite存入文件
+
+fread:用fread从文件中读出学生信息。
+
+ 
+
+fwrite.c
+
+#include <stdio.h>
+#define SIZE 2
+struct student_type
+{
+ char name[10];
+ int num;
+ int age;
+ char addr[10];
+}stud[SIZE];
+void save()
+{
+ FILE *fp;
+ int i;
+ if((fp=fopen("stu_list","wb"))==NULL)
+ {
+  printf("cant open the file");
+  exit(0);
+ }
+ for(i=0;i<SIZE;i++)
+ {
+   if(fwrite(&stud[i],sizeof(struct student_type),1,fp)!=1)
+    printf("file write error\n");
+ }
+ fclose(fp);
+}
+main()
+{
+ int i;
+ for(i=0;i<SIZE;i++)
+ {
+   scanf("%s%d%d%s",&stud[i].name,&stud[i].num,&stud[i].age,&stud[i].addr);
+   save();
+ }
+ for(i=0;i<SIZE;i++)
+ {
+   printf("%s,%d,%d",stud[i].name,stud[i].num,stud[i].age,stud[i].addr);
+ }
+}
+
+
+ 
+
+ 
+
+fread.c
+
+#include <stdio.h>
+#define SIZE 2
+struct student_type
+{
+ char name[10];
+ int num;
+ int age;
+ char addr[10];
+}stud[SIZE];
+void read()
+{
+ FILE *fp;
+ int i;
+ if((fp=fopen("stu_list","rb"))==NULL)
+ {
+  printf("cant open the file");
+  exit(0);
+ }
+ for(i=0;i<SIZE;i++)
+ {
+   if(fread(&stud[i],sizeof(struct student_type),1,fp)!=1)
+    printf("file write error\n");
+ }
+ fclose(fp);
+}
+main()
+{
+
+ int i;
+ read();
+ for(i=0;i<SIZE;i++)
+ {
+   printf("%s,%d,%d,%s",stud[i].name,stud[i].num,stud[i].age,stud[i].addr);
+   printf("\n");
+ }
+}
+

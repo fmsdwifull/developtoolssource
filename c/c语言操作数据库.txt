@@ -1,0 +1,133 @@
+#include <Windows.h>  
+
+02 #include <stdio.h>  
+
+03 #include <stdlib.h>  
+
+04 #include <string.h>  
+
+05 #include <mysql.h>   
+
+06 #include <iostream>  
+
+07 using namespace std;  
+
+08    
+
+09 int main()  
+
+10 {  
+
+11     const char user[] = "root";         //username  
+
+12     const char pswd[] = "root";         //password  
+
+13     const char host[] = "localhost";    //or"127.0.0.1"  
+
+14     const char table[] = "test";        //database  
+
+15     unsigned int port = 3306;           //server port          
+
+16     MYSQL myCont;  
+
+17     MYSQL_RES *result;  
+
+18     MYSQL_ROW sql_row;  
+
+19     MYSQL_FIELD *fd;  
+
+20     char column[32][32];  
+
+21     int res;  
+
+22     mysql_init(&myCont);  
+
+23     if(mysql_real_connect(&myCont,host,user,pswd,table,port,NULL,0))  
+
+24     {  
+
+25         cout<<"connect succeed!"<<endl;  
+
+26         mysql_query(&myCont, "SET NAMES GBK"); //设置编码格式,否则在cmd下无法显示中文  
+
+27         res=mysql_query(&myCont,"select * from samples");//查询  
+
+28         if(!res)  
+
+29         {  
+
+30             result=mysql_store_result(&myCont);//保存查询到的数据到result  
+
+31             if(result)  
+
+32             {  
+
+33                 int i,j;  
+
+34                 cout<<"number of result: "<<(unsigned long)mysql_num_rows(result)<<endl;  
+
+35                 for(i=0;fd=mysql_fetch_field(result);i++)//获取列名  
+
+36                 {  
+
+37                     strcpy(column[i],fd->name);  
+
+38                 }  
+
+39                 j=mysql_num_fields(result);  
+
+40                 for(i=0;i<j;i++)  
+
+41                 {  
+
+42                     printf("%s\t",column[i]);  
+
+43                 }  
+
+44                 printf("\n");  
+
+45                 while(sql_row=mysql_fetch_row(result))//获取具体的数据  
+
+46                 {  
+
+47                     for(i=0;i<j;i++)  
+
+48                     {  
+
+49                         printf("%s\n",sql_row[i]);  
+
+50                     }  
+
+51                     printf("\n");  
+
+52                 }  
+
+53             }  
+
+54         }  
+
+55         else 
+
+56         {  
+
+57             cout<<"query sql failed!"<<endl;  
+
+58         }  
+
+59     }  
+
+60     else 
+
+61     {  
+
+62         cout<<"connect failed!"<<endl;  
+
+63     }  
+
+64     if(result!=NULL) mysql_free_result(result);//释放结果资源  
+
+65     mysql_close(&myCont);//断开连接  
+
+66     return 0;  
+
+67 

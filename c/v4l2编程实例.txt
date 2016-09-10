@@ -1,0 +1,126 @@
+/*         下面是一个完整的程序 test.c
+*           gcc test.c -o test -ljpeg
+*/
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <errno.h>
+#include <linux/videodev.h>
+         
+#include <jpeglib.h>
+
+
+#define WIDTH  320
+#define HEIGHT 240
+#define V4L_DEVICE "/dev/video0"
+
+
+main()
+{
+
+
+   unsigned char* buf;
+   int i,j;
+   int fd;
+   int re;
+
+
+   struct video_capability vcap;
+   struct video_channel    vc;
+   struct video_mbuf       mbuf;
+   struct video_mmap       mm;
+
+
+   fd = open(V4L_DEVICE, O_RDWR);
+   if(fd<=0)
+   {
+           perror("open");
+             exit(1);
+   }
+
+
+   if(ioctl(fd, VIDIOCGCAP, &vcap)<0)
+   {
+             perror("VIDIOCGCAP");
+             exit(1);
+   }
+
+
+   fprintf(stderr,"Video Capture Device Name : %s\n",vcap.name);
+
+
+   for(i=0;i<vcap.channels;i++)
+   {
+             vc.channel = i;
+             if(ioctl(fd, VIDIOCGCHAN, &vc)<0)
+             {
+                       perror("VIDIOCGCHAN");
+                       exit(1);
+             }
+
+
+             fprintf(stderr,"Video Source (%d) Name : %s\n",i, vc.name);
+   }
+
+
+   vc.channel =1;
+   vc.norm=1;
+
+
+   if(ioctl(fd, VIDIOCSCHAN, &vc) < 0)
+   {
+             perror("VIDIOCSCHAN");
+             exit(1);
+   }
+
+
+  if(ioctl(fd, VIDIOCGMBUF, &mbuf) < 0)
+  {
+        perror("VIDIOCGMBUF");
+        exit(1);
+  }
+   fprintf(stderr,"the frames number is %d\n",mbuf.frames); 
+
+
+  buf = (unsigned char*)mmap(0, mbuf.size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+   if((int)buf < 0)
+   {
+             perror("mmap");
+             exit(1);
+   }
+   mm.frame  = 0;
+   mm.height = HEIGHT;
+   mm.width  = WIDTH;
+   mm.format = VIDEO_PALETTE_RGB24;
+
+
+   if(ioctl(fd, VIDIOCMCAPTURE, &mm)<0)
+   {
+             perror("VIDIOCMCAPTURE");
+            exit(1);
+   }
+
+
+   if(ioctl(fd, VIDIOCSYNC, &mm.frame)<0)
+   {
+             perror("VIDIOCSYNC");
+             exit(1);
+   }
+
+
+if(-1 == (write_jpeg("./pic001.jpeg",buf,75,WIDTH,HEIGHT,0)))
+{
+        printf("write_jpeg error\n");
+        exit(1);
+}
+
+
+   munmap(buf,mbuf.size);
+   close(fd);
+} 

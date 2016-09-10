@@ -1,0 +1,22 @@
+void CaptureCurrTime(void)//获取当前时间
+{
+  //时钟
+  time_t t;
+  ////返回值为自1970年1月1日0：0：0以来的秒数，同时也存放在 t 变量中
+  time(&t);
+  //// localtime将日历时间变换成本地时间 (考虑到本地时区和夏时制标志)
+  curr_tm_t=localtime(&t);
+  if((curr_tm_t->tm_year + 1900) == 1970)
+   {
+    curr_tm_t->tm_year   = 2009 - 1900;
+    curr_tm_t->tm_mon   =   1 - 1;
+    curr_tm_t->tm_mday   =   1;
+    curr_tm_t->tm_hour   =   0;
+    curr_tm_t->tm_min   = 0;
+    curr_tm_t->tm_sec   =   0;
+    t=mktime(curr_tm_t);
+    stime((long*)&t);
+   }
+
+}
+

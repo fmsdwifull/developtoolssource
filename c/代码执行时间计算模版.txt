@@ -1,0 +1,69 @@
+//#include "ppthread.h"
+#include <sys/time.h>
+
+//   .h文件和相关库没有弄过来，所以本程序可能不能直接编译成功
+//   但两个功能模块可以很好的利用
+//1，getticktime()获取程序执行当前时间
+//2, 多线程创建方式
+
+
+using namespace p_base;
+#define TH_NUM 40
+
+
+long int  getticktime()
+{
+        struct timeval t_start,t_end;
+        gettimeofday(&t_start, NULL);
+        //printf("Start time: %ld us\n", t_start.tv_usec);
+        return  t_start.tv_usec;
+}
+
+void* func(void* arg)
+{   
+
+    int *a = (int *)arg;
+    int i,sum;
+    long int _start,_end;
+
+    i=1;
+    sum=0;
+   
+    //_start=getticktime();     
+    printf("start time is :%ld\n",getticktime());
+    while(i<=100000)
+    { 
+            sum=sum+i;
+            i+=1;
+    }
+    printf("end time is :%ld\n",getticktime());
+    //_end=getticktime(); 
+    //printf("sum is %d--phtead is %d -- cost time is %ld\n",sum,*a,_end-_start);
+
+}
+
+int main(void)
+{
+    THRD_INFO  info;
+    s32 l=3,h=7,b=1;
+    s32 flag=-1;	
+    int tid[TH_NUM];
+    pthread_t thread[TH_NUM];
+    
+    flag=-1;
+    for(int i=0;i<TH_NUM;i++)
+    {
+       tid[i] = i;		
+       pthread_create(&thread[i],NULL,func,&tid[i]);	
+
+    }
+
+    
+    for(int i=0; i< 40; i++)
+    {
+            pthread_join(thread[i],NULL);
+    }
+
+    return 0;
+}
+

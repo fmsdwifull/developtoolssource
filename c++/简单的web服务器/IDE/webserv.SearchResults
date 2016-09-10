@@ -1,0 +1,6 @@
+---- process_rq Matches (5 in 4 files) ----
+Probeth.cpp:			process_rq(request, commu_fd);	//返回给客户端	
+Socknet.cpp:   process_rq( char *rq, int fd )
+Socknet.cpp:int process_rq( char *rq, int fd )
+Socknet.h:int process_rq( char *rq, int fd );
+Web_server.cpp:        process_rq(request, commu_fd);

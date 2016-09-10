@@ -1,0 +1,179 @@
+code=C/C++][/code]
+
+/*socket_client.c，运行在arm9 Linux开发板中*/
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <string.h>
+#include <netdb.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+
+#define PORT 4321
+#define BUFFER_SIZE 8*1024
+
+int main(int argc, char *argv[])
+{
+int sock_fd,sendbytes;
+FILE *file_fd;
+int buf[BUFFER_SIZE]; // It is the integer  
+struct hostent *host;
+struct sockaddr_in serv_addr;
+
+long int num;
+memset(buf,0,sizeof(buf)); 
+file_fd = fopen("test-mmap.jpg","rb");
+/* if(-1 == (num = fread(buf,1,sizeof(buf),file_fd)))
+{
+perror("fopen");
+exit(1);
+}
+printf("file words num is : %d\n\n",num);
+*/ 
+
+if(argc < 2) //It was 3 first time.
+{
+fprintf(stderr,"USAGE:./client Hostname(or ip address)Text\n");
+exit(1);
+}
+
+
+
+if(NULL == (host = gethostbyname(argv[1])))
+{
+perror("gethostbyname");
+exit(1);
+}
+
+//memset(buf,0,sizeof(buf));
+//scanf("%s",buf);
+//sprintf(buf,"%s",argv[2]);
+
+if(-1 == (sock_fd = socket(AF_INET,SOCK_STREAM,0)))   
+{
+perror("socket");
+exit(1);
+}
+
+serv_addr.sin_family = AF_INET;
+serv_addr.sin_port = htons(PORT);
+serv_addr.sin_addr = *((struct in_addr*)host->h_addr);
+bzero(&(serv_addr.sin_zero),8);
+
+if(-1 == connect(sock_fd,(struct sockaddr *)&serv_addr,sizeof(struct sockaddr)))
+{
+perror("connect");
+exit(1);
+} 
+
+
+if(-1 == (num = fread(buf,1,sizeof(buf),file_fd)))
+{
+perror("fopen");
+exit(1);
+} 
+if(-1 == (sendbytes = send(sock_fd,buf,num,0))) //send()
+{
+perror("send");
+exit(1);
+}
+if(num != sendbytes)
+{
+printf("num != sendbytes\n");
+//break;
+}
+printf("file words num is :%d\n",num);
+printf("-----sendbytes is :%d\n\n",sendbytes);
+
+
+close(sock_fd);
+close(file_fd);
+exit(0);
+}
+
+-----------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------
+[code=C/C++][/code]
+/*socket_server.c,运行在虚拟机Linux中*/
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <string.h>
+#include <unistd.h>
+#include <netinet/in.h>
+
+#define PORT 4321 //PORT number must be the same with client
+#define BUFFER_SIZE 8*1024 // 1024 * 1024 = 1048576
+#define MAX_QUE_CONN_NM 10
+
+int main()
+{
+struct sockaddr_in server_sockaddr,client_sockaddr;
+int sin_size,recvbytes;
+int sock_fd,client_fd;
+FILE *file_fd;
+char buf[BUFFER_SIZE];
+long int num;
+int ii;
+
+if(-1 == (sock_fd = socket(AF_INET,SOCK_STREAM,0))) //SOCK_STREAM
+{
+perror("socket");
+exit(1);
+}
+printf("Socket id = %d(sock_fd)\n",sock_fd);
+
+server_sockaddr.sin_family = AF_INET;
+server_sockaddr.sin_port = htons(PORT);
+server_sockaddr.sin_addr.s_addr = INADDR_ANY;
+bzero(&(server_sockaddr.sin_zero),8);
+
+int i = 1;
+setsockopt(sock_fd,SOL_SOCKET,SO_REUSEADDR,&i,sizeof(i));
+if(-1 == bind(sock_fd,(struct sockaddr *)&server_sockaddr,sizeof(struct sockaddr)))
+{
+perror("bind");
+exit(1);
+}
+printf("Bind success!\n");
+
+if(-1 == listen(sock_fd,MAX_QUE_CONN_NM))
+{
+perror("listen");
+exit(1);
+}
+printf("Listening....\n");
+
+if(-1 == (client_fd = accept(sock_fd,(struct sockaddr *)&client_sockaddr,&sin_size)))
+{
+perror("accept");
+exit(1);
+} 
+
+memset(buf,0,sizeof(buf));
+if(-1 == (recvbytes = recv(client_fd,buf,sizeof(buf),0)))
+{
+perror("recv");
+exit(1);
+}
+printf("sizeof(buf)= %d\n",sizeof(buf));
+printf("receive bytes num is :%d\n\n",recvbytes);
+//FILE * abc_fd;
+
+file_fd = fopen("./test-mmap.jpg","wb");
+if(-1 == (num = fwrite(buf,sizeof(buf),1,file_fd)))
+{
+perror("fwrite date ");
+exit(1);
+}
+// printf("Received a message: %s\n",buf);
+close(sock_fd);
+fclose(file_fd);
+exit(0);
+
+}
+
+

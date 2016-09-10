@@ -1,0 +1,42 @@
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+
+void fileparase(char *src,char *filename,char *dirname)
+{
+	int total_len=0;
+	int sub_len=0;
+
+	char *p;
+	
+	
+	total_len=strlen(src);	
+    	printf("total_len:%d\n",total_len);
+	p=strrchr(src,'/')+1;
+	strcpy(filename,p);
+	printf("file name is :%s\n",filename);
+	
+	sub_len=strlen(p);
+	printf("sub_len:%d\n",sub_len);
+
+	
+	src[total_len-sub_len]='\0';
+	strcpy(dirname,src);
+    	printf("dir is :%s\n",src);
+}
+
+
+
+int main(void)
+{
+	char src[128]="/home/tv189/192.168.19.223/20131205/004_008.log";
+	char filename[128];
+	char dirname[128];
+
+	fileparase(src,filename,dirname);
+	
+	printf("filename :%s, dirname :%s\n",filename,dirname);	
+
+	return 0;
+}

@@ -1,0 +1,109 @@
+UDP通讯实例
+2008-04-29 15:30:05 / 个人分类：linux C编程 
+
+UDP协议的几点好处：
+1.UDP不要求保持一个连接；
+2.UDP没有因接收方认可收到数据包（或者当数据包没有正确抵达而自动重传）而带来的开销；
+3.设计UDP的目的是用于短应用和控制信息；
+4.在一个数据包接一个数据包的基础上，UDP要求的网络带宽比TCP更小。
+UDP的几个缺点：
+1.程序员必须创建代码检测传输错误并进行重传（如果应用程序要求这样做）；
+2.程序员必须把大数据包分片。
+
+code：
+<1>
+/*
+* sender.c--UDP protocol example
+*/ 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+
+int port = 6789;
+
+int main()
+{
+    int socket_descrīptor;
+    int iter = 0;
+    char buf[80];
+    struct sockaddr_in address;
+
+    /* Initialize socket address structure for Interner Protocols */
+    bzero(&address, sizeof(address)); // empty data structure
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = inet_addr("127.0.0.1");
+    address.sin_port = htons(port);
+
+    /* Create a UDP socket */
+    socket_descrīptor = socket(AF_INET, SOCK_DGRAM, 0);
+
+    //Loop 20 times (a nice round number ) sending data
+    for(iter = 0; iter <= 20; iter++)
+    {
+        sprintf(buf, "data packet with ID %d\n", iter);
+        sendto(socket_descrīptor, buf, sizeof(buf), 0, (struct sockaddr *)&address, sizeof(address));
+    }    
+
+    /* send a termination message */
+    sprintf(buf, "stop\n");
+    sendto(socket_descrīptor, buf, sizeof(buf), 0, (struct sockaddr *)&address, sizeof(address)); //address is the target of the message send
+    
+    close (socket_descrīptor);
+    printf("Message Sent, Terminating\n");
+    return 0;
+}
+
+<2>
+/*
+* receiver.c--received of the UDP protocol
+*/
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+
+int port = 6789;
+
+int main()
+{
+    int sin_len;
+    char message[256];
+    int socket_descrīptor;
+    struct sockaddr_in sin;
+    printf("Waiting for data from sender\n");
+
+    // Initialize socket address structure for Internet Protocols
+    bzero(&sin, sizeof(sin));
+    sin.sin_family = AF_INET;
+    sin.sin_addr.s_addr = htonl(INADDR_ANY);
+    sin.sin_port = htons(port);
+    sin_len = sizeof(sin);
+
+    //Create a UDP socket and bind it to the port
+    socket_descrīptor = socket(AF_INET, SOCK_DGRAM, 0);
+    bind(socket_descrīptor, (struct sockaddr *)&sin, sizeof(sin));
+    
+    //Loop forever (or until a termination message is received)
+    // Received data through the socket and process it.The processing in this program is really simple --printing
+    while(1)
+    {
+        recvfrom(socket_descrīptor, message, sizeof(message), 0, (struct sockaddr *)&sin, &sin_len);
+        printf("Response from server : %s\n", message);
+        if(strncmp(message, "stop", 4) == 0)
+        {
+            printf("sender has told me to end the connection\n");
+            break;
+        }
+    }
+    close(socket_descrīptor);
+    return 0;
+}
+
+分别编译产生sender、receiver两个可执

@@ -1,0 +1,277 @@
+int System::setRealTime() {     pid_t status;     struct tm tm;     memset(&tm, 0, sizeof(tm));     QString minute = ui->MinuteEdit->text();     QString hour = ui->HourEdit->text();     QString date = ui->DateEdit->text();     QString month = ui->MonthEdit->text();     QString years = ui->YearsEdit->text();      tm.tm_sec = 0;                      //    tm.tm_sec   =   0;     tm.tm_min = minute.toInt();         //    tm.tm_min   =   15;     tm.tm_hour = hour.toInt();          //    tm.tm_hour  =   11;     tm.tm_mday = date.toInt();          //    tm.tm_mday  =   26;     tm.tm_mon = month.toInt() - 1;      //    tm.tm_mon   =   b;     tm.tm_year = years.toInt() - 1900;  //    tm.tm_year   =   2012  -   1900;      if(set_date(&tm) == -1)         perror( "set_date ");      status = system("hwclock -w");     if (-1 == status)        printf("system error!");     return   0; }
+
+
+
+C++内存池示例 
+
+--------------------------------------------------------------------------------
+ 
+摘自: www.chinaitlab.com  被阅读次数: 1000 
+
+
+由 yangyi 于 2012-09-24 22:33:09 提供 
+
+
+
+-
+    经典的内存池（mempool）技术，是一种用于分配大量大小相同的小对象的技术。通过该技术可以极大加快内存分配/释放过程。
+    
+    内存池只涉及两个静态常量：Block_Size（mempool的容量大小）、Item_Size（小对象的大小，但不能小于指针的大小，在32位平台也就是不能小于4字节），以及两个指针变量BlockNodeHead、FreeItemNodeHead.开始，这两个指针均为空。
+    
+    其中指针变量BlockNodeHead是把所有申请的内存块（Block_Node）串成一个链表，以便通过它可以释放所有申请的内存。FreeItemNodeHead变量则是把所有自由内存结点（Item_Node）串成一个链。
+    
+    下面给出完整实例代码：
+    
+    /*
+    
+    *
+    
+    * Filename: mempool.h
+    
+    *
+    
+    * Description:
+    
+    *
+    
+    * Version: 1.0
+    
+    * Created: 03/31/2010 11:03:23 AM
+    
+    * Revision: None
+    
+    * Compiler:  gcc（g+）
+    
+    *
+    
+    * Author: Zhenghe Zhang （Programmer）， 406550785@qq.com
+    
+    * Company: XX.CO.,LTD
+    
+    *
+    
+    */
+    
+    #ifndef _MEMPOOL_H
+    
+    #define _MEMPOOL_H
+    
+    class Mempool
+    
+    {
+    
+    public:
+    
+    Mempool（）；
+    
+    ~Mempool（）；
+    
+    void* Alloc（）；
+    
+    void Free（void* p）；
+    
+    private:
+    
+    const static int Block_Size = 1024;
+    
+    const static int Item_Size = 16;
+    
+    struct Item_Node
+    
+    {
+    
+    struct Item_Node *next;
+    
+    char data[Item_Size - sizeof（Item_Node*）];
+    
+    };
+    
+    struct Block_Node
+    
+    {
+    
+    struct Block_Node *next;
+    
+    Item_Node data[Block_Size / Item_Size];
+    
+    };
+    
+    Block_Node* BlockNodeHead;
+    
+    Item_Node* freeItemNodeHead;
+    
+    };
+    
+    #endif
+ 
+   
+    /*
+    
+    *
+    
+    * Filename: mempool.cpp
+    
+    *
+    
+    * Description:
+    
+    *
+    
+    * Version: 1.0
+    
+    * Created: 03/31/2010 01:43:20 PM
+    
+    * Revision: None
+    
+    * Compiler: gcc（g++）
+    
+    *
+    
+    * Author: Zhenghe Zhang （Programmer）， 406550785@qq.com
+    
+    * Company: XX.CO.,LTD
+    
+    *
+    
+    */
+    
+    #include <iostream>
+    
+    #include “mempool.h”
+    
+    using namespace std;
+    
+    Mempool::Mempool（）：BlockNodeHead（NULL），freeItemNodeHead（NULL）
+    
+    {
+    
+    }
+    
+    Mempool::~Mempool（）
+    
+    {
+    
+    Block_Node* tmp = BlockNodeHead;
+    
+    while（tmp != NULL）
+    
+    {
+    
+    BlockNodeHead = BlockNodeHead->next;
+    
+    delete tmp;
+    
+    tmp = BlockNodeHead;
+    
+    }
+    
+    }
+    
+    void* Mempool::Alloc（）
+    
+    {
+    
+    if（freeItemNodeHead == NULL）
+    
+    {
+    
+    Block_Node* tmpBlockNode = new Block_Node;
+    
+    if（tmpBlockNode == NULL）
+    
+    {
+    
+    perror（“No memory!/n”）；
+    
+    exit（1）；
+    
+    }
+    
+    if（BlockNodeHead == NULL）
+    
+    {
+    
+    BlockNodeHead = tmpBlockNode;
+    
+    BlockNodeHead->next = NULL;
+    
+    }
+    
+    else
+    
+    {
+    
+    tmpBlockNode->next = BlockNodeHead;
+    
+    BlockNodeHead = tmpBlockNode;
+    
+    }
+    
+    freeItemNodeHead = &（tmpBlockNode->data[0]）；
+    
+    int i = 0;
+    
+    while（i < Block_Size/Item_Size - 1）
+    
+    {
+    
+    tmpBlockNode->data[i].next = &（tmpBlockNode->data[i + 1]）；
+    
+    ++i;
+    
+    }
+    
+    tmpBlockNode->data[i].next = NULL;
+    
+    }
+    
+    Item_Node* allocItemNode = freeItemNodeHead;
+    
+    freeItemNodeHead = freeItemNodeHead->next;
+    
+    return allocItemNode;
+    
+    }
+    
+    void Mempool::Free（void* p）
+    
+    {
+    
+    Item_Node* tmpItemNode = static_cast<Item_Node*>（p）；
+    
+    tmpItemNode->next = freeItemNodeHead;
+    
+    freeItemNodeHead = tmpItemNode;
+    
+    }
+    
+    int main（）
+    
+    {
+    
+    Mempool pool;
+    
+    char* p = NULL;
+    
+    int i = 0;
+    
+    while（i < 100000）
+    
+    {
+    
+    p = static_cast<char*>（pool.Alloc（））；
+    
+    strcpy（p, “Hello”）；
+    
+    cout《i《“ : ”《p《endl;
+    
+    ++i;
+    
+    pool.Free（p）；
+    
+    }
+    
+    return 0;
+    
+    }
+ 

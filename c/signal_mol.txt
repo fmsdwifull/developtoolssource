@@ -1,0 +1,60 @@
+/**************************************************************
+* Version
+* Author  liusaiyu
+* Date 2013-10-19
+* Modified_Date:
+***************************************************************/
+
+/*******************************************
+*1,SIGABRT,调用a b o r t产生此信号。进程异常终止。
+*2,SIGALRM,超过用alarm函数设置的时间时产生此信号
+*3,SIGBUS，指示一个实现定义的硬件故障
+*4,SIGCHLD,在一个进程终止或停止时，该信号被送给其父进程
+*5,SIGCOND,
+*6,SIGFPE,此信号表示一个算术运算异常
+*7,SIGINT,当用户按中断键，一般DEL键或CTRL-C键
+*8,SIGIO,异步IO操作
+*9,SIGQUIT,当用户在终端上按退出键（一般采用C t r l - \）
+*10,SIGHUP,如果终端界面检测到一个连接断开，则将此信号送给与该终端相关的控制进程
+* void (*signal(int sig, void (*func)(int)))(int);
+********************************************/
+
+
+#include <stdio.h>
+#include <unistd.h>
+#include <signal.h>
+
+
+void SigRoutine(int dunno);
+
+int main(void)
+{   
+    printf("process id is %d\n ",getpid());
+
+    signal(SIGHUP, SigRoutine);
+    signal(SIGINT, SigRoutine);
+    signal(SIGQUIT, SigRoutine);
+    for (;;) ;
+    return 0;
+}
+
+
+void SigRoutine(int dunno)
+{
+    switch(dunno)
+    {
+        case 1:
+            printf("get a signal :SIGHUP\n");
+            break;
+        case 2:
+            printf("get a signal :SIGINT\n");
+            break;
+        case 3:
+            printf("get a signal :SIGQUIT\n");
+            break;
+        //-------------
+        default:
+            printf("over\n");
+    }
+}
+

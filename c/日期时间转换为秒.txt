@@ -1,0 +1,33 @@
+time_t datatime2sec(int year,int month,int day,int hour,int min,int sec)
+{
+    time_t std_time=0;
+    struct tm curr_tm_t;
+
+    if((year<=1970)||(month>12)||(day>31)||(hour>24)||(hour<0)||(min>60)||(min<0)||(sec>60)||(sec<0))
+    {
+	printf("there is error input\n");
+	return -1;
+    }
+	
+    curr_tm_t.tm_year   = year- 1900;
+    curr_tm_t.tm_mon   =   month - 1;
+    curr_tm_t.tm_mday   =   day;
+    curr_tm_t.tm_hour   =   hour;
+    curr_tm_t.tm_min   = min;
+    curr_tm_t.tm_sec   =   sec;
+
+    std_time=mktime(&curr_tm_t);
+	
+    printf("sec is :%d\n",std_time);
+  
+    return std_time;
+}
+
+
+int main()
+{
+	datatime2sec(2013,12,17,13,40,43);
+	return 0;
+}
+
+

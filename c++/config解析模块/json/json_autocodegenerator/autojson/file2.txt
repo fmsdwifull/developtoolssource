@@ -1,0 +1,30 @@
+{
+    "cmd_type": "0X70000012",
+    "from": "FS",
+    "to": "MS",
+    "timestamp": "",
+    "dev_id": "",
+    "tasks": [
+        {
+            "APP_name": "live",
+            "streaming_id": "111",
+            "rtmpConcurrency": "1",
+            "rtspConcurrency": "1",
+            "hlsConcurrency": "1",
+            "hlsTotalDownload": "2",
+            "rtmpFlow": "1111",
+            "rtspFlow": "11",
+            "hlsFlow": "1233"
+        },
+        {
+            "ip": "192",
+            "mac": "abc"
+        }
+    ],
+    "work": [
+        {
+            "dir": "home",
+            "etc": "usr"
+        }
+    ]
+}

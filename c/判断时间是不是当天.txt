@@ -1,0 +1,31 @@
+time_t GetTimeD(void)
+{
+	struct tm *ptr;
+	
+	time_t lt;
+	lt =time(NULL);
+	ptr=localtime(&lt);
+
+	return lt-(ptr->tm_hour)*3600-ptr->tm_min*60-ptr->tm_sec;
+}
+
+int istoday(time_t time)
+{
+	time_t std_day_sec=0;
+	std_day_sec=GetTimeD();
+	
+	if((time>std_day_sec)&&(time<=std_day_sec+86400))
+		return 0;
+	else
+		return -1;
+}
+
+int main(void)
+{	
+	time_t mytime;
+	mytime =time(NULL);
+	
+	printf("istoday  : %d\n",istoday(mytime));
+
+	return 0;
+}

@@ -1,0 +1,222 @@
+/**************************************************************
+* Version
+* Author  liusaiyu
+* Date 2013-10-19
+* Modified_Date:
+***************************************************************/
+
+/***************************************
+*基于测试ffmpeg编解码功能编写的一个测试
+*编解码的示例，执行没有图像显示，有待进
+*一步研究学习
+***************************************/
+
+#include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+#include <libswscale/swscale.h>
+#include <stdio.h>
+#include <SDL/SDL.h>
+#include <SDL/SDL_thread.h>
+#include <error.h>
+#include <errno.h>
+
+
+
+
+int main(int argc, char *argv[]) 
+{
+    AVFormatContext *pFormatCtx;
+    int i, videoStream;
+    AVCodecContext *pCodecCtx;
+    AVDictionary *d = NULL;
+    AVCodec *pCodec;
+    AVFrame *pFrame;
+    AVFrame *pFrameRGB;
+    AVPacket packet;
+    int frameFinished = 0;
+    int numBytes;
+    uint8_t *buffer;
+    struct SwsContext *pSwsCtx;
+    int avk;
+    
+
+    // Register all formats and codecs
+    av_register_all();
+    const char *filename = "/home/admin/usr/media/xxx.rmvb";
+
+
+    // Open video file
+    if ((avk=avformat_open_input(&pFormatCtx, filename, NULL, NULL)) != 0)
+    {
+        perror("avformat_open_input");
+        return -1; // Couldn't open file
+    }
+
+    
+    printf("**************88video height:%d\n",pFormatCtx->nb_streams);
+
+
+    // Retrieve stream information
+    if (av_find_stream_info(pFormatCtx) < 0)
+    {
+        perror("av find stream info error");
+        return -1; // Couldn't find stream information
+    }
+
+    // Dump information about file onto standard error
+    //dump_format(pFormatCtx, 0, filename, 0);
+
+    // Find the first video stream
+    videoStream = -1;
+    for (i = 0; i < pFormatCtx->nb_streams; i++)
+        if (pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO)
+        {
+            videoStream = i;
+            break;
+        }   	
+    if (videoStream == -1)
+    {
+        perror("videoStream error");
+        return -1; // Didn't find a video stream
+    }       
+
+    // Get a pointer to the codec context for the video stream
+    pCodecCtx = pFormatCtx->streams[videoStream]->codec;
+
+    // Find the decoder for the video stream
+    pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
+    if(pCodec == NULL) 
+    {
+        fprintf(stderr, "Unsupported codec!\n");
+        return -1; // Codec not found
+    }
+
+    
+    // Open codec
+    if (avcodec_open2(pCodecCtx, pCodec,&d) < 0)
+    {
+        perror("open avcodec error");
+        return -1; // Could not open codec
+    }
+
+    // Allocate video frame
+    if((pFrame = avcodec_alloc_frame())==NULL)
+    {
+        perror("avcodec error");
+        return -1;
+    }
+    
+    // Allocate an AVFrame structure
+    pFrameRGB = avcodec_alloc_frame();
+    if (pFrameRGB == NULL)
+        return -1;
+    
+
+    // Determine required buffer size and allocate buffer
+    numBytes = avpicture_get_size(PIX_FMT_RGB24, pCodecCtx->width,pCodecCtx->height);
+    buffer = (uint8_t *) av_malloc(numBytes * sizeof(uint8_t));
+
+    // Assign appropriate parts of buffer to image planes in pFrameRGB
+    // Note that pFrameRGB is an AVFrame, but AVFrame is a superset
+    // of AVPicture
+    avpicture_fill((AVPicture *) pFrameRGB, buffer, PIX_FMT_RGB24,
+            pCodecCtx->width, pCodecCtx->height);
+    
+#if 1
+
+    // Read frames and save first five frames to disk
+    while (av_read_frame(pFormatCtx, &packet) >= 0)
+    {
+        // Is this a packet from the video stream?
+        if (packet.stream_index == videoStream) 
+        {
+            // Allocate video frame
+            int xx;
+            pFrame = avcodec_alloc_frame();
+            int w = pCodecCtx->width;
+            int h = pCodecCtx->height;
+            // Decode video frame
+            xx=avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, &packet);
+            printf("xx:%d\n",xx);
+            pSwsCtx = sws_getContext(w, h, pCodecCtx->pix_fmt, w, h,PIX_FMT_RGB565, SWS_POINT, NULL, NULL, NULL);
+            if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER)) 
+        	{
+                fprintf(stderr, "Could not initialize SDL - %s\n",SDL_GetError());
+                exit(1);
+        	}
+            SDL_Surface *screen;
+            screen = SDL_SetVideoMode(pCodecCtx->width, pCodecCtx->height, 0,0);
+            if (!screen) {
+                fprintf(stderr, "SDL: could not set video mode - exiting\n");
+                exit(1);
+        	}
+            SDL_Overlay *bmp;
+            bmp = SDL_CreateYUVOverlay(pCodecCtx->width, pCodecCtx->height,SDL_YV12_OVERLAY, screen);
+            SDL_Rect rect;
+            if (frameFinished)
+        	{
+                SDL_LockYUVOverlay(bmp);
+                AVPicture pict;
+                pict.data[0] = bmp->pixels[0];
+                pict.data[1] = bmp->pixels[2];
+                pict.data[2] = bmp->pixels[1];
+                pict.linesize[0] = bmp->pitches[0];
+                pict.linesize[1] = bmp->pitches[2];
+                pict.linesize[2] = bmp->pitches[1];
+                // Convert the image into YUV format that SDL uses
+                img_convert(&pict, PIX_FMT_YUV420P, (AVPicture *) pFrame,pCodecCtx->pix_fmt, pCodecCtx->width,pCodecCtx->height);
+                SDL_UnlockYUVOverlay(bmp);
+                rect.x = 0;
+                rect.y = 0;
+                rect.w = pCodecCtx->width;
+                rect.h = pCodecCtx->height;
+                SDL_DisplayYUVOverlay(bmp, &rect);
+        	}
+            SDL_Event event;
+            av_free_packet(&packet);
+            SDL_PollEvent(&event);
+            switch (event.type) {
+            case SDL_QUIT:
+                SDL_Quit();
+                exit(0);
+                break;
+            default:
+                break;
+        	}
+        }
+    }
+    
+    // Free the RGB image
+    av_free(buffer);
+    av_free(pFrameRGB);
+
+    // Free the YUV frame
+    av_free(pFrame);
+
+    // Close the codec
+    avcodec_close(pCodecCtx);
+
+    // Close the video file
+    av_close_input_file(pFormatCtx);
+#endif
+    return 0;
+}
+
+int img_convert(AVPicture *dst, enum PixelFormat dst_pix_fmt,
+        const AVPicture *src, enum PixelFormat src_pix_fmt, int src_width,
+        int src_height) {
+    int w;
+    int h;
+    struct SwsContext *pSwsCtx;
+
+    w = src_width;
+    h = src_height;
+    pSwsCtx = sws_getContext(w, h, src_pix_fmt, w, h, dst_pix_fmt, SWS_BICUBIC,
+            NULL, NULL, NULL);
+
+    sws_scale(pSwsCtx, src->data, src->linesize, 0, h, dst->data,
+            dst->linesize);
+    //杩欐牱閲婃斁鎺塸SwsCtx鐨勫唴瀛?
+
+    return 0;
+}

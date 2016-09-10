@@ -1,0 +1,59 @@
+
+
+#include <string.h>
+#include <assert.h>
+#include <time.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/inotify.h>
+#include <error.h>
+#include <unistd.h>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <sys/select.h>
+
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
+
+
+int LoadDateFile(char *dir,char *file)
+{
+	DIR *dp2;
+	struct dirent *entry2;
+    struct stat statbuf2;
+
+    if((dp2=opendir(dir))==NULL)
+    {
+        fprintf(stderr,"cannot open directory:%s\n",dir);
+        return 0;
+    }
+
+    chdir(dir);
+    while((entry2=readdir(dp2))!=NULL)
+    {
+        lstat(entry2->d_name,&statbuf2);
+        if(!S_ISDIR(statbuf2.st_mode))//notice
+        {
+			printf("fffffffffffffffffffffffffffff:%s\n",entry2->d_name);
+			
+        }
+    }
+    closedir(dp2);
+
+}
+
+
+
+int main(void) 
+{
+
+	LoadDateFile("/home/doudou/test/MM","B");
+	return 0;
+} 
+
